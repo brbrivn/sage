@@ -13,14 +13,27 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/passport": "^1.0.17",
+    "@types/passport-google-oauth20": "^2.0.17",
+    "@types/passport-jwt": "^4.0.1",
+    "@types/passport-oauth2": "^1.8.0",
+    "@types/twilio": "^3.19.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "googleapis": "^170.1.0",
     "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.1",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
+    "passport-jwt": "^4.0.1",
+    "passport-oauth2": "^1.8.0",
     "pg": "^8.17.1",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.37.7"
+    "sequelize": "^6.37.7",
+    "twilio": "^5.11.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

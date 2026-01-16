@@ -5,23 +5,23 @@ Based on `meeting_vip_prd.md`, this plan outlines the steps to build the MVP Ver
 ## Phase 1: Project Initialization & Infrastructure
 
 ### 1.1 Repository Setup
-- [ ] Initialize git repository in `/Users/mtungi/Desktop/Avizo`.
-- [ ] Create `.gitignore` for Node.js, React Native, Electron, and environment files.
-- [ ] Set up directory structure:
+- [x] Initialize git repository in `/Users/mtungi/Desktop/Avizo`.
+- [x] Create `.gitignore` for Node.js, React Native, Electron, and environment files.
+- [x] Set up directory structure:
     - `backend/`
     - `mobile/`
     - `desktop/` (or shared `client/` if sharing code)
 
 ### 1.2 Backend Setup (Node.js + Express)
-- [ ] Initialize Node.js project in `backend/`.
-- [ ] Install core dependencies: `express`, `pg` (Postgres), `sequelize` (or generic ORM), `dotenv`, `cors`.
-- [ ] Set up TypeScript configuration (`tsconfig.json`).
-- [ ] Create basic Express server structure with health check endpoint.
-- [ ] Configure ESLint and Prettier.
+- [x] Initialize Node.js project in `backend/`.
+- [x] Install core dependencies: `express`, `pg` (Postgres), `sequelize` (or generic ORM), `dotenv`, `cors`.
+- [x] Set up TypeScript configuration (`tsconfig.json`).
+- [x] Create basic Express server structure with health check endpoint.
+- [x] Configure ESLint and Prettier.
 
 ### 1.3 Database Setup
-- [ ] Set up PostgreSQL database (local or hosted).
-- [ ] Define database schema based on PRD Section 6.2:
+- [x] Set up PostgreSQL database (local or hosted).
+- [x] Define database schema based on PRD Section 6.2:
     - `users`
     - `meetings`
     - `vip_alerts`
@@ -31,12 +31,12 @@ Based on `meeting_vip_prd.md`, this plan outlines the steps to build the MVP Ver
 ## Phase 2: Backend Core Features
 
 ### 2.1 Authentication & Authorization
-- [ ] Implement User model.
-- [ ] Set up authentication middleware (Passport.js or similar).
-- [ ] Implement Google OAuth strategy (Sign in + Calendar scope).
+- [x] Implement User model.
+- [x] Set up authentication middleware (Passport.js or similar).
+- [x] Implement Google OAuth strategy (Sign in + Calendar scope).
 - [ ] Implement Zoom OAuth strategy (Meeting read scope).
 - [ ] Create JWT handling for session management.
-- [ ] **Endpoints**: `POST /api/auth/signup`, `POST /api/auth/login`.
+- [x] **Endpoints**: `POST /api/auth/signup`, `POST /api/auth/login`.
 
 ### 2.2 Calendar & Meeting Integration
 - [ ] Integrate Google Calendar API client.
@@ -62,9 +62,9 @@ Based on `meeting_vip_prd.md`, this plan outlines the steps to build the MVP Ver
 ## Phase 3: Mobile App Development (React Native)
 
 ### 3.1 Mobile Setup
-- [ ] Initialize React Native project (Exp).
-- [ ] Install dependencies (React Navigation, UI libraries, State management).
-- [ ] Configure absolute paths and basic theming (Fonts, Colors).
+- [x] Initialize React Native project (Exp).
+- [x] Install dependencies (React Navigation, UI libraries, State management).
+- [x] Configure absolute paths and basic theming (Fonts, Colors).
 
 ### 3.2 Authentication Flows
 - [ ] Create Login Screen.
@@ -86,8 +86,8 @@ Based on `meeting_vip_prd.md`, this plan outlines the steps to build the MVP Ver
 ## Phase 4: Desktop App Development (Electron)
 
 ### 4.1 Desktop Setup
-- [ ] Initialize Electron project (e.g., using Electron Forge or a specific boilerplate).
-- [ ] Set up React front-end for the Electron renderer process.
+- [x] Initialize Electron project (e.g., using Electron Forge or a specific boilerplate).
+- [x] Set up React front-end for the Electron renderer process.
 - [ ] Check if we can share code/components with the React Native web equivalent or keep separate.
 
 ### 4.2 Desktop Features
