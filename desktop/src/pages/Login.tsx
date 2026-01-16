@@ -2,9 +2,12 @@
 
 const Login = () => {
     const handleLogin = () => {
-        // Redirect to Backend Google Auth
-        // On success, backend will redirect to http://localhost:5173/auth/callback?token=...
-        window.location.href = 'http://localhost:5000/api/auth/google';
+        const loginUrl = 'http://localhost:5000/api/auth/google?state=desktop';
+        if (window.electronAPI) {
+            window.electronAPI.openExternal(loginUrl);
+        } else {
+            window.location.href = loginUrl;
+        }
     };
 
     return (

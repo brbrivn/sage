@@ -8,7 +8,13 @@ const router = Router();
 // Initiate Google Auth
 router.get(
     '/google',
-    passport.authenticate('google', { scope: ['profile', 'email', 'https://www.googleapis.com/auth/calendar.readonly'] })
+    (req, res, next) => {
+        const state = req.query.state as string;
+        passport.authenticate('google', {
+            scope: ['profile', 'email', 'https://www.googleapis.com/auth/calendar.readonly'],
+            state: state
+        })(req, res, next);
+    }
 );
 
 // Google Auth Callback
@@ -25,13 +31,13 @@ router.get(
             { expiresIn: '7d' }
         );
 
-        // In a real mobile app auth flow, we'd redirect to a deep link
-        // For MVP development, we can redirect to a success page or return JSON if testing via Postman
-        // res.json({ token, user });
+        const state = req.query.state as string;
 
-        // Redirecting to mobile/desktop app via deep link (example schema)
-        // For now, let's redirect to a simple HTML page that displays the token or redirects locally
-        res.redirect(`http://localhost:5173/auth/callback?token=${token}`);
+        if (state === 'desktop') {
+            res.redirect(`sage-app://auth/callback?token=${token}`);
+        } else {
+            res.redirect(`http://localhost:5173/auth/callback?token=${token}`);
+        }
     }
 
 );

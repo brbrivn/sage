@@ -1,5 +1,8 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 function createWindow() {
     const mainWindow = new BrowserWindow({
         width: 1000,
@@ -10,10 +13,13 @@ function createWindow() {
             contextIsolation: true,
         },
     });
-    const isDev = process.env.NODE_ENV === 'development';
+    const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
     if (isDev) {
         // In dev, load Vite server
-        mainWindow.loadURL('http://localhost:5173');
+        mainWindow.loadURL('http://localhost:5173').catch(() => {
+            // If vite isn't up yet, retry or show error
+            setTimeout(() => mainWindow.loadURL('http://localhost:5173'), 1000);
+        });
         mainWindow.webContents.openDevTools();
     }
     else {

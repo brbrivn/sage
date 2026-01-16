@@ -3,12 +3,18 @@
         "target": "ESNext",
         "module": "NodeNext",
         "moduleResolution": "NodeNext",
+        "lib": [
+            "ESNext",
+            "DOM"
+        ],
         "outDir": "../dist-electron",
-        "rootDir": ".",
         "strict": true,
-        "esModuleInterop": true
+        "skipLibCheck": true
     },
     "include": [
         "."
+    ],
+    "exclude": [
+        "../node_modules"
     ]
 }
