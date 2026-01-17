@@ -2,7 +2,7 @@
 
 const Login = () => {
     const handleLogin = () => {
-        const loginUrl = 'http://localhost:5000/api/auth/google?state=desktop';
+        const loginUrl = 'http://localhost:5001/api/auth/google?state=desktop';
         if (window.electronAPI) {
             window.electronAPI.openExternal(loginUrl);
         } else {

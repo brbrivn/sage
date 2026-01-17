@@ -6,7 +6,7 @@ import app from './app';
 import sequelize from './config/database';
 import syncDatabase from './models/index';
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5001;
 
 const startServer = async () => {
     try {

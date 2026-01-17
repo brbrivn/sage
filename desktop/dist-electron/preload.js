@@ -1,4 +1,7 @@
-import { contextBridge } from 'electron';
+import { contextBridge, shell, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('electronAPI', {
-// expose capabilities
+    openExternal: (url) => shell.openExternal(url),
+    onDeepLink: (callback) => {
+        ipcRenderer.on('deep-link', (_event, url) => callback(url));
+    }
 });

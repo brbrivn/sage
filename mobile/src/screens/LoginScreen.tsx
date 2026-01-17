@@ -15,7 +15,7 @@ export default function LoginScreen() {
         // Points to our local backend auth route
         // In dev: Use localhost (mapped via adb or ngrok)
         // For Simulator: localhost works
-        const backendUrl = 'http://localhost:5000/api/auth/google';
+        const backendUrl = 'http://localhost:5001/api/auth/google';
 
         const result = await WebBrowser.openAuthSessionAsync(
             backendUrl,

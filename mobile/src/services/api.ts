@@ -1,6 +1,6 @@
 import { getToken } from './auth';
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'http://localhost:5001/api';
 
 export const fetchTodayMeetings = async () => {
     const token = await getToken();
