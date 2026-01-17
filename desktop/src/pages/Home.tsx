@@ -1,31 +1,46 @@
-import { useEffect, useState } from 'react';
-import { fetchTodayMeetings } from '../services/api';
+import { useState, useEffect } from 'react';
+import { fetchTodayMeetings, deleteMeeting, fetchAccounts } from '../services/api';
 import type { Meeting } from '../types';
 import { useNavigate } from 'react-router-dom';
-import { Video, Clock, ChevronRight } from 'lucide-react';
+import { Video, Clock, ChevronRight, Trash2, UserCircle } from 'lucide-react';
 
 const Home = () => {
     const [meetings, setMeetings] = useState<Meeting[]>([]);
+    const [accounts, setAccounts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentTime, setCurrentTime] = useState(new Date());
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const load = async () => {
-            try {
-                const data = await fetchTodayMeetings();
-                setMeetings(data);
-            } catch (error) {
-                console.error(error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
+    const loadData = async () => {
+        try {
+            const meetingData = await fetchTodayMeetings();
+            setMeetings(meetingData);
+            const accountData = await fetchAccounts();
+            setAccounts(accountData);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    useEffect(() => {
+        loadData();
         const timer = setInterval(() => setCurrentTime(new Date()), 60000);
         return () => clearInterval(timer);
     }, []);
+
+    const handleDelete = async (e: React.MouseEvent, id: number) => {
+        e.stopPropagation();
+        if (window.confirm('Remove this meeting from your list?')) {
+            try {
+                await deleteMeeting(id);
+                setMeetings(prev => prev.filter(m => m.id !== id));
+            } catch (error) {
+                console.error(error);
+            }
+        }
+    };
 
     const getTimeStatus = (startTime: string) => {
         const start = new Date(startTime);
@@ -49,6 +64,16 @@ const Home = () => {
                     <h2>Timeline</h2>
                     <p className="subtitle">Your schedule for {currentTime.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
                 </div>
+                {accounts.length > 1 && (
+                    <div className="account-switcher">
+                        <UserCircle size={18} />
+                        <select className="account-select">
+                            {accounts.map(acc => (
+                                <option key={acc.id} value={acc.email}>{acc.email}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
             </header>
 
             <div className="timeline">
@@ -56,7 +81,7 @@ const Home = () => {
                     <div className="empty-state">
                         <Video size={48} className="icon-sec" />
                         <p>No meetings found for today.</p>
-                        <button onClick={() => window.location.reload()}>Refresh Calendar</button>
+                        <button onClick={loadData}>Refresh Calendar</button>
                     </div>
                 )}
 
@@ -80,7 +105,12 @@ const Home = () => {
                                 <div className="card-content">
                                     <div className="card-header">
                                         <h3>{meeting.title}</h3>
-                                        <ChevronRight size={18} className="chevron" />
+                                        <div className="card-actions">
+                                            <button className="icon-btn-text" onClick={(e) => handleDelete(e, meeting.id)}>
+                                                <Trash2 size={16} />
+                                            </button>
+                                            <ChevronRight size={18} className="chevron" />
+                                        </div>
                                     </div>
                                     <div className="card-meta">
                                         <div className="meta-item">

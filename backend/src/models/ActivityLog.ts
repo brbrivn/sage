@@ -1,20 +1,20 @@
 import { Model, DataTypes } from 'sequelize';
 import sequelize from '../config/database';
 
-class VIPAlert extends Model {
+class ActivityLog extends Model {
     public id!: number;
     public userId!: number;
     public meetingId!: number;
     public vipName!: string;
-    public vipEmail!: string; // Primary method for identification
-    public status!: 'active' | 'triggered' | 'cancelled';
-    public notificationMethod!: 'call' | 'sms' | 'push';
+    public type!: 'desktop' | 'email' | 'call';
+    public status!: 'sent' | 'failed';
+    public message!: string;
 
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;
 }
 
-VIPAlert.init(
+ActivityLog.init(
     {
         id: {
             type: DataTypes.INTEGER,
@@ -33,23 +33,23 @@ VIPAlert.init(
             type: DataTypes.STRING,
             allowNull: false,
         },
-        vipEmail: {
+        type: {
             type: DataTypes.STRING,
-            allowNull: true,
+            allowNull: false,
         },
         status: {
-            type: DataTypes.ENUM('active', 'triggered', 'cancelled'),
-            defaultValue: 'active',
+            type: DataTypes.STRING,
+            defaultValue: 'sent',
         },
-        notificationMethod: {
-            type: DataTypes.ENUM('call', 'sms', 'push', 'desktop', 'email'),
-            defaultValue: 'desktop',
+        message: {
+            type: DataTypes.STRING,
+            allowNull: false,
         },
     },
     {
         sequelize,
-        tableName: 'vip_alerts',
+        tableName: 'activity_logs',
     }
 );
 
-export default VIPAlert;
+export default ActivityLog;

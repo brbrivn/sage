@@ -29,4 +29,19 @@ export const createVIPAlert = async (meetingId: number, vipName: string) => {
     return response.data;
 };
 
+export const deleteMeeting = async (id: number) => {
+    const response = await api.delete(`/meetings/${id}`);
+    return response.data;
+};
+
+export const fetchAccounts = async () => {
+    const response = await api.get('/auth/accounts');
+    return response.data;
+};
+
+export const fetchActivityLogs = async () => {
+    const response = await api.get('/activities');
+    return response.data;
+};
+
 export default api;

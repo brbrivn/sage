@@ -74,10 +74,23 @@ const Settings = () => {
                 <h3>Account</h3>
                 <div className="setting-item">
                     <div className="setting-info">
-                        <span>Connected Google Account</span>
-                        <small>Syncing calendars from Google</small>
+                        <span>Link New Account</span>
+                        <small>Monitor calendars from another Google email</small>
                     </div>
-                    <span className="badge-connected">Connected</span>
+                    <button className="primary-btn" onClick={() => {
+                        const user = JSON.parse(atob(localStorage.getItem('sage_token')?.split('.')[1] || '{}'));
+                        window.location.href = `http://localhost:5001/api/auth/google?state=web:${user.id}`;
+                    }}>Add Account</button>
+                </div>
+
+                <div className="setting-item">
+                    <div className="setting-info">
+                        <span>Connected Google Accounts</span>
+                        <small>Active calendars being monitored</small>
+                    </div>
+                    <div className="account-pills">
+                        <span className="badge-connected">Primary</span>
+                    </div>
                 </div>
             </div>
         </div>

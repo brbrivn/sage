@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Home, Settings as SettingsIcon, LogOut } from 'lucide-react';
 import { removeToken } from '../services/api';
+import ActivityPanel from './ActivityPanel';
 
 const Sidebar = () => {
     const navigate = useNavigate();
@@ -45,6 +46,7 @@ const Layout = () => {
             <main className="main-content">
                 <Outlet />
             </main>
+            <ActivityPanel />
         </div>
     );
 };

@@ -14,12 +14,14 @@ app.use(morgan('dev'));
 import authRoutes from './routes/authRoutes';
 import meetingRoutes from './routes/meetingRoutes';
 import alertRoutes from './routes/alertRoutes';
+import activityRoutes from './routes/activityRoutes';
 import webhookRoutes from './routes/webhookRoutes';
 import './config/passport';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/meetings', meetingRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/activities', activityRoutes);
 app.use('/api/webhooks', webhookRoutes);
 
 app.get('/health', (req, res) => {
