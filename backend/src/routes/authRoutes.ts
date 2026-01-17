@@ -4,6 +4,7 @@ import { Router } from 'express';
 import jwt from 'jsonwebtoken';
 import ConnectedAccount from '../models/ConnectedAccount';
 import User from '../models/User';
+import { authenticateJWT } from '../middleware/auth';
 
 const router = Router();
 

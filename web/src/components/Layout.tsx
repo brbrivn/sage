@@ -2,6 +2,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Home, Settings as SettingsIcon, LogOut } from 'lucide-react';
 import { removeToken } from '../services/api';
 import ActivityPanel from './ActivityPanel';
+import NotificationListener from './NotificationListener';
 
 const Sidebar = () => {
     const navigate = useNavigate();
@@ -42,6 +43,7 @@ const Sidebar = () => {
 const Layout = () => {
     return (
         <div className="app-layout">
+            <NotificationListener />
             <Sidebar />
             <main className="main-content">
                 <Outlet />

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import Meeting from '../models/Meeting';
 import VIPAlert from '../models/VIPAlert';
 import User from '../models/User';
-import { sendCallAlert } from '../services/twilioService';
+import { triggerNotification } from '../services/notificationService';
 
 const router = Router();
 
@@ -29,9 +29,7 @@ router.post('/zoom', async (req, res) => {
         console.log(`Participant ${participant.user_name} joined meeting ${meetingId}`);
 
         try {
-            // Find our internal meeting record that matches this Zoom meeting ID
-            // NOTE: multiple users might track the same meeting, logic here needs to be robust
-            // For MVP, we find ALL meetings with this ID
+            // Find our internal meeting record(s) that match this Zoom meeting ID
             const meetings = await Meeting.findAll({
                 where: { meetingId: meetingId.toString() }
             });
@@ -47,25 +45,12 @@ router.post('/zoom', async (req, res) => {
 
                 for (const alert of alerts) {
                     // Check if participant matches VIP
-                    // Simple name check for MVP (email is harder as Zoom doesn't always send email for guests)
                     const nameMatch = participant.user_name.toLowerCase().includes(alert.vipName.toLowerCase());
                     const emailMatch = participant.email && participant.email === alert.vipEmail;
 
                     if (nameMatch || emailMatch) {
                         // TRIGGER ALERT!
-                        const user = await User.findByPk(alert.userId);
-                        if (user && user.phoneNumber) {
-                            console.log(`Triggering alert for user ${user.email} because ${alert.vipName} joined!`);
-
-                            await sendCallAlert(
-                                user.phoneNumber,
-                                `${alert.vipName} has joined your meeting: ${meeting.title}. Press 1 to join.`
-                            );
-
-                            // Mark triggered
-                            alert.status = 'triggered';
-                            await alert.save();
-                        }
+                        await triggerNotification(alert, meeting);
                     }
                 }
             }

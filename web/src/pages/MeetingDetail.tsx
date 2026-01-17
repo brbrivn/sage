@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Meeting } from '../types';
 import { createVIPAlert } from '../services/api';
-import { ArrowLeft, Clock } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 const MeetingDetail = () => {
@@ -78,56 +78,57 @@ const MeetingDetail = () => {
     };
 
     return (
-        <div className="container">
-            <header className="header with-back">
-                <button onClick={() => navigate(-1)} className="back-btn">
-                    <ArrowLeft size={24} />
+        <div className="settings-container">
+            <header className="settings-header">
+                <button onClick={() => navigate(-1)} className="event-op-btn" style={{ marginBottom: 12 }}>
+                    <ArrowLeft size={18} />
                 </button>
-                <h2>Event Details</h2>
+                <h1>{meeting.title}</h1>
+                <p>Monitor arrivals for this meeting.</p>
             </header>
 
-            <div className="meeting-header">
-                <div>
-                    <h3>{meeting.title}</h3>
-                    <div className="meta big-meta">
-                        <Clock size={16} />
-                        <span className={timeLeft === 'Started' ? 'text-green' : 'text-blue'}>
-                            {timeLeft || 'Loading...'}
-                        </span>
+            <div className="settings-group">
+                <div className="group-title">Timing & Status</div>
+                <div className="settings-row">
+                    <div className="row-info">
+                        <label>Auto-Monitoring Status</label>
+                        <span>Tracking arrivals {timeLeft}</span>
+                    </div>
+                    <div className={timeLeft === 'Started' ? 'status-live' : 'status-soon'} style={{ fontSize: 13, fontWeight: 600 }}>
+                        {timeLeft}
                     </div>
                 </div>
-                <p>Who do you want to monitor?</p>
             </div>
 
-            <div className="participant-list">
-                {participants.length === 0 && (
-                    <div className="empty-state">
-                        <p>No invitees found via Google Calendar.</p>
-                        <p style={{ fontSize: 12, opacity: 0.7 }}>Ensure the event has guests invited.</p>
-                    </div>
-                )}
-
-                {participants.map((p) => (
-                    <div
-                        key={p}
-                        className={`participant-card ${selectedVIPs.has(p) ? 'selected' : ''}`}
-                    >
-                        <div className="avatar">
-                            {/* Initials avatar logic */}
-                            {p.charAt(0).toUpperCase()}
+            <div className="settings-group">
+                <div className="group-title">Participants ({participants.length})</div>
+                <div className="accounts-list">
+                    {participants.length === 0 && (
+                        <div className="empty-state-v2">
+                            <p>No invitees found for this event.</p>
                         </div>
-                        <span className="name" style={{ flex: 1 }}>{p}</span>
+                    )}
 
-                        <label className="toggle-switch">
-                            <input
-                                type="checkbox"
-                                checked={selectedVIPs.has(p)}
-                                onChange={() => toggleMonitor(p)}
-                            />
-                            <span className="slider"></span>
-                        </label>
-                    </div>
-                ))}
+                    {participants.map((p) => (
+                        <div key={p} className="account-item">
+                            <div className="log-icon" style={{ background: selectedVIPs.has(p) ? 'var(--primary-faded)' : 'var(--hover)', color: selectedVIPs.has(p) ? 'var(--primary)' : 'var(--text-sec)' }}>
+                                {p.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="account-details" style={{ flex: 1 }}>
+                                <span className="account-email">{p}</span>
+                                {selectedVIPs.has(p) && <span className="account-status">Monitoring VIP</span>}
+                            </div>
+                            <label className="switch">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedVIPs.has(p)}
+                                    onChange={() => toggleMonitor(p)}
+                                />
+                                <span className="slider"></span>
+                            </label>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );

@@ -8,7 +8,7 @@ class VIPAlert extends Model {
     public vipName!: string;
     public vipEmail!: string; // Primary method for identification
     public status!: 'active' | 'triggered' | 'cancelled';
-    public notificationMethod!: 'call' | 'sms' | 'push';
+    public notificationMethod!: 'call' | 'sms' | 'push' | 'desktop' | 'email';
 
     public readonly createdAt!: Date;
     public readonly updatedAt!: Date;

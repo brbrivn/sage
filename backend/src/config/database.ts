@@ -11,7 +11,7 @@ const dbPassword = process.env.DB_PASSWORD;
 const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
     host: dbHost,
     dialect: 'postgres',
-    logging: false, // set to console.log to see SQL queries
+    logging: console.log, // set to console.log to see SQL queries
 });
 
 export default sequelize;

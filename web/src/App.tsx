@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
 import AuthCallback from './pages/AuthCallback';
 import Home from './pages/Home';
@@ -9,19 +9,12 @@ import Layout from './components/Layout';
 import './App.css';
 
 function App() {
-  const navigate = useNavigate();
-
   useEffect(() => {
-    if (window.electronAPI) {
-      window.electronAPI.onDeepLink((urlPath) => {
-        console.log('[Renderer] Deep link received:', urlPath);
-        // urlPath will be like "auth/callback?token=..."
-        const target = `/${urlPath}`;
-        console.log('[Renderer] Navigating to:', target);
-        navigate(target);
-      });
+    // Request notification permission for browser notifications
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      Notification.requestPermission();
     }
-  }, [navigate]);
+  }, []);
 
   return (
     <Routes>
@@ -33,7 +26,7 @@ function App() {
       <Route element={<Layout />}>
         <Route path="/home" element={<Home />} />
         <Route path="/meeting/:id" element={<MeetingDetail />} />
-        <Route path="/settings" element={<Settings />} /> {/* Added Settings route */}
+        <Route path="/settings" element={<Settings />} />
       </Route>
 
       <Route path="*" element={<div style={{ color: 'white', padding: 20 }}><h1>404 Not Found</h1><p>Current Path: {window.location.pathname}</p></div>} />
