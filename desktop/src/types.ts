@@ -12,6 +12,7 @@ export interface Meeting {
     platform: 'zoom' | 'meet' | 'teams' | 'other';
     meetingUrl: string;
     participants: string[];
+    VIPAlerts?: VIPAlert[];
 }
 
 export interface VIPAlert {

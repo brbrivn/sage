@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticateJWT } from '../middleware/auth';
 import Meeting from '../models/Meeting';
+import VIPAlert from '../models/VIPAlert';
 import { syncCalendar } from '../services/calendarService';
 
 const router = Router();
@@ -15,6 +16,11 @@ router.get('/today', authenticateJWT, async (req: any, res) => {
 
         const meetings = await Meeting.findAll({
             where: { userId },
+            include: [{
+                model: VIPAlert,
+                required: false,
+                where: { status: 'active' }
+            }],
             order: [['startTime', 'ASC']]
         });
 

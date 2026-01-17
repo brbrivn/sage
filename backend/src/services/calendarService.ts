@@ -27,6 +27,7 @@ export const syncCalendar = async (userId: number) => {
             orderBy: 'startTime',
         });
 
+        console.log(`[Calendar] Found ${response.data.items?.length || 0} events from Google.`);
         const events = response.data.items || [];
 
         for (const event of events) {
