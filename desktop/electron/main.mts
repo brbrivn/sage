@@ -5,12 +5,18 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-if (process.defaultApp) {
-    if (process.argv.length >= 2) {
-        app.setAsDefaultProtocolClient('sage-app', process.execPath, [path.resolve(process.argv[1])]);
-    }
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+    app.quit();
 } else {
-    app.setAsDefaultProtocolClient('sage-app');
+    if (process.defaultApp) {
+        if (process.argv.length >= 2) {
+            app.setAsDefaultProtocolClient('sage-app', process.execPath, [path.resolve(process.argv[1])]);
+        }
+    } else {
+        app.setAsDefaultProtocolClient('sage-app');
+    }
 }
 
 let mainWindow: BrowserWindow | null = null;
@@ -20,7 +26,7 @@ function createWindow() {
         width: 1000,
         height: 800,
         webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
+            preload: path.join(__dirname, 'preload.mjs'),
             nodeIntegration: false,
             contextIsolation: true,
         },
@@ -38,8 +44,36 @@ function createWindow() {
     }
 }
 
+// Store pending deep link if window is not ready
+let pendingDeepLink: string | null = null;
+
+function handleDeepLink(url: string) {
+    console.log('[Main] Received deep link:', url);
+    if (url.startsWith('sage-app://')) {
+        const pathAndQuery = url.replace('sage-app://', '');
+        console.log('[Main] Sending to renderer:', pathAndQuery);
+
+        if (mainWindow && mainWindow.webContents && !mainWindow.webContents.isLoading()) {
+            mainWindow.webContents.send('deep-link', pathAndQuery);
+        } else {
+            console.log('[Main] Window not ready, queuing deep link');
+            pendingDeepLink = pathAndQuery;
+        }
+    }
+}
+
+// Add to createWindow or whenReady to check for pending link
 app.whenReady().then(() => {
     createWindow();
+
+    // Check if we have a pending link after window creation (and load)
+    mainWindow?.webContents.on('did-finish-load', () => {
+        if (pendingDeepLink) {
+            console.log('[Main] Window loaded, sending pending deep link:', pendingDeepLink);
+            mainWindow?.webContents.send('deep-link', pendingDeepLink);
+            pendingDeepLink = null;
+        }
+    });
 
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -67,13 +101,3 @@ app.on('open-url', (event, url) => {
     event.preventDefault();
     handleDeepLink(url);
 });
-
-function handleDeepLink(url: string) {
-    if (url.startsWith('sage-app://')) {
-        const pathAndQuery = url.replace('sage-app://', '');
-        // Inform the renderer process about the new URL
-        if (mainWindow) {
-            mainWindow.webContents.send('deep-link', pathAndQuery);
-        }
-    }
-}

@@ -12,8 +12,11 @@ function App() {
   useEffect(() => {
     if (window.electronAPI) {
       window.electronAPI.onDeepLink((urlPath) => {
+        console.log('[Renderer] Deep link received:', urlPath);
         // urlPath will be like "auth/callback?token=..."
-        navigate(`/${urlPath}`);
+        const target = `/${urlPath}`;
+        console.log('[Renderer] Navigating to:', target);
+        navigate(target);
       });
     }
   }, [navigate]);
@@ -24,6 +27,7 @@ function App() {
       <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/home" element={<Home />} />
       <Route path="/meeting/:id" element={<MeetingDetail />} />
+      <Route path="*" element={<div style={{ color: 'white', padding: 20 }}><h1>404 Not Found</h1><p>Current Path: {window.location.pathname}</p></div>} />
     </Routes>
   );
 }

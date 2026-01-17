@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "main": "dist-electron/main.js",
+  "main": "dist-electron/main.mjs",
   "scripts": {
     "dev:vite": "vite",
     "dev:electron": "cross-env NODE_ENV=development tsc -p electron/tsconfig.json && electron .",

@@ -2,8 +2,12 @@
 
 const Login = () => {
     const handleLogin = () => {
-        const loginUrl = 'http://localhost:5001/api/auth/google?state=desktop';
-        if (window.electronAPI) {
+        // Detect if running in Electron or Web
+        const isElectron = !!window.electronAPI;
+        const state = isElectron ? 'desktop' : 'web';
+        const loginUrl = `http://localhost:5001/api/auth/google?state=${state}`;
+
+        if (isElectron) {
             window.electronAPI.openExternal(loginUrl);
         } else {
             window.location.href = loginUrl;
