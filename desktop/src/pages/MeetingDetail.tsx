@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import type { Meeting } from '../types';
 import { createVIPAlert } from '../services/api';
-import { ArrowLeft, User, Clock, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Clock } from 'lucide-react';
 import { useState, useEffect } from 'react';
 
 const MeetingDetail = () => {
