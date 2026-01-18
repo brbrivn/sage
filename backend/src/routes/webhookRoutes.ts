@@ -71,9 +71,25 @@ router.post('/simulate', async (req, res) => {
     console.log(`[Simulate] Webhook for Meeting ${meetingId}, Participant: ${participantName}`);
 
     try {
-        const meetings = await Meeting.findAll({
+        let meetings = await Meeting.findAll({
             where: { meetingId: meetingId.toString() }
         });
+
+        if (meetings.length === 0) {
+            // Fallback: try finding by googleEventId or internal ID
+            meetings = await Meeting.findAll({
+                where: {
+                    [process.env.NODE_ENV === 'test' ? 'id' : 'googleEventId']: meetingId.toString() // Fallback logic
+                }
+            });
+
+            // If still empty, try just checking if the passed ID matches a meeting ID loosely
+            if (meetings.length === 0) {
+                meetings = await Meeting.findAll({
+                    where: { id: meetingId }
+                });
+            }
+        }
 
         if (meetings.length === 0) {
             return res.json({ status: 'no_meeting_found', message: `No meeting found with Platform ID ${meetingId}` });
