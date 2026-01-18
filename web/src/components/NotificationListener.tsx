@@ -46,6 +46,9 @@ const NotificationListener = () => {
                 } else {
                     console.log('[Socket] Notification blocked (no permission)');
                 }
+
+                // Trigger UI refresh
+                window.dispatchEvent(new Event('activity-update'));
             });
 
             return () => {

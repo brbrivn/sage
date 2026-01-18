@@ -147,6 +147,31 @@ body {
   border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.right-panel.collapsed {
+  width: 48px;
+  overflow: hidden;
+  align-items: center;
+  padding-top: 24px;
+}
+
+.panel-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-sec);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel-toggle-btn:hover {
+  background: var(--hover);
+  color: var(--text);
 }
 
 .panel-header {

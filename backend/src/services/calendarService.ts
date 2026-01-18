@@ -1,62 +1,76 @@
 import { google } from 'googleapis';
 import User from '../models/User';
 import Meeting from '../models/Meeting';
+import ConnectedAccount from '../models/ConnectedAccount';
 
 export const syncCalendar = async (userId: number) => {
     try {
-        const user = await User.findByPk(userId);
-        if (!user || !user.googleToken) {
-            throw new Error('User not found or not connected to Google');
-        }
-
-        const auth = new google.auth.OAuth2();
-        auth.setCredentials({ access_token: user.googleToken });
-
-        const calendar = google.calendar({ version: 'v3', auth });
-
-        // Fetch today's events
-        const now = new Date();
-        const endOfDay = new Date();
-        endOfDay.setHours(23, 59, 59, 999);
-
-        const response = await calendar.events.list({
-            calendarId: 'primary',
-            timeMin: now.toISOString(),
-            timeMax: endOfDay.toISOString(),
-            singleEvents: true,
-            orderBy: 'startTime',
+        const accounts = await ConnectedAccount.findAll({
+            where: { userId, provider: 'google', isActive: true }
         });
 
-        console.log(`[Calendar] Found ${response.data.items?.length || 0} events from Google.`);
-        const events = response.data.items || [];
+        if (accounts.length === 0) {
+            console.log(`[Calendar] No connected Google accounts found for user ${userId}`);
+            return 0;
+        }
 
-        for (const event of events) {
-            // Basic logic to detect if it's a meeting (has a link)
-            // In MVP, we just look for common patterns in location or description
-            const meetingLink = extractMeetingLink(event);
+        let totalEvents = 0;
 
-            if (meetingLink) {
-                // Save or update meeting
-                await Meeting.findOrCreate({
-                    where: {
-                        userId,
-                        meetingId: event.id || 'unknown'
-                    },
-                    defaults: {
-                        userId,
-                        title: event.summary || 'Untitled Meeting',
-                        startTime: new Date(event.start?.dateTime || event.start?.date || Date.now()),
-                        endTime: new Date(event.end?.dateTime || event.end?.date || Date.now()),
-                        platform: detectPlatform(meetingLink),
-                        meetingUrl: meetingLink,
-                        meetingId: event.id || 'unknown',
-                        participants: event.attendees?.map(a => a.email).filter(Boolean) as string[],
-                    }
+        for (const account of accounts) {
+            console.log(`[Calendar] Syncing for account: ${account.email}`);
+
+            const auth = new google.auth.OAuth2();
+            auth.setCredentials({
+                access_token: account.accessToken,
+                refresh_token: account.refreshToken
+            });
+
+            const calendar = google.calendar({ version: 'v3', auth });
+
+            // Fetch today's events
+            const now = new Date();
+            const endOfDay = new Date();
+            endOfDay.setHours(23, 59, 59, 999);
+
+            try {
+                const response = await calendar.events.list({
+                    calendarId: 'primary',
+                    timeMin: now.toISOString(),
+                    timeMax: endOfDay.toISOString(),
+                    singleEvents: true,
+                    orderBy: 'startTime',
                 });
+
+                const events = response.data.items || [];
+                totalEvents += events.length;
+
+                for (const event of events) {
+                    const meetingLink = extractMeetingLink(event);
+
+                    if (meetingLink) {
+                        const platform = detectPlatform(meetingLink);
+                        const platformId = extractPlatformId(meetingLink, platform);
+
+                        await Meeting.upsert({
+                            userId,
+                            accountId: account.id,
+                            title: event.summary || 'Untitled Meeting',
+                            startTime: new Date(event.start?.dateTime || event.start?.date || Date.now()),
+                            endTime: new Date(event.end?.dateTime || event.end?.date || Date.now()),
+                            platform,
+                            meetingUrl: meetingLink,
+                            meetingId: platformId || 'unknown',
+                            googleEventId: event.id || 'unknown',
+                            participants: event.attendees?.map(a => a.email).filter(Boolean) as string[],
+                        });
+                    }
+                }
+            } catch (err) {
+                console.error(`[Calendar] Error syncing account ${account.email}:`, err);
             }
         }
 
-        return events.length;
+        return totalEvents;
 
     } catch (error) {
         console.error('Error syncing calendar:', error);
@@ -85,4 +99,18 @@ const detectPlatform = (url: string): 'zoom' | 'meet' | 'teams' | 'other' => {
     if (url.includes('meet.google.com')) return 'meet';
     if (url.includes('teams.microsoft.com')) return 'teams';
     return 'other';
+}
+
+const extractPlatformId = (url: string, platform: 'zoom' | 'meet' | 'teams' | 'other'): string | null => {
+    try {
+        if (platform === 'zoom') {
+            // Extracts 123456789 from .../j/123456789...
+            const match = url.match(/\/j\/(\d+)/);
+            return match ? match[1] : null;
+        }
+        // Add other platforms if needed (e.g. Teams, Meet codes)
+        return null;
+    } catch (e) {
+        return null;
+    }
 }

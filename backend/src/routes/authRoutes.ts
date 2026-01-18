@@ -34,16 +34,26 @@ router.get(
         // If we have a userId in state, it means we are linking
         if (userIdStr) {
             const userId = parseInt(userIdStr);
-            await ConnectedAccount.findOrCreate({
-                where: { userId, email: profile.email, provider: 'google' },
-                defaults: {
+            const existingAccount = await ConnectedAccount.findOne({
+                where: { userId, email: profile.email, provider: 'google' }
+            });
+
+            if (existingAccount) {
+                await existingAccount.update({
+                    accessToken: profile.accessToken,
+                    refreshToken: profile.refreshToken,
+                    isActive: true
+                });
+            } else {
+                await ConnectedAccount.create({
                     userId,
                     email: profile.email,
                     provider: 'google',
                     accessToken: profile.accessToken,
                     refreshToken: profile.refreshToken,
-                }
-            });
+                    isActive: true
+                });
+            }
             // Redirect back to settings
             return res.redirect('http://localhost:5173/settings?linked=true');
         }
@@ -54,17 +64,27 @@ router.get(
             user = await User.create({ email: profile.email });
         }
 
-        // Also save this as a connected account if it's the first time
-        await ConnectedAccount.findOrCreate({
-            where: { userId: user.id, email: user.email, provider: 'google' },
-            defaults: {
+        // Update or create connected account
+        const primaryAccount = await ConnectedAccount.findOne({
+            where: { userId: user.id, email: user.email, provider: 'google' }
+        });
+
+        if (primaryAccount) {
+            await primaryAccount.update({
+                accessToken: profile.accessToken || '',
+                refreshToken: profile.refreshToken || '',
+                isActive: true
+            });
+        } else {
+            await ConnectedAccount.create({
                 userId: user.id,
                 email: user.email,
                 provider: 'google',
                 accessToken: profile.accessToken || '',
                 refreshToken: profile.refreshToken || '',
-            }
-        });
+                isActive: true
+            });
+        }
 
         const token = jwt.sign(
             { id: user.id, email: user.email },

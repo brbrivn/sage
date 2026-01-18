@@ -7,15 +7,14 @@ import { useState, useEffect } from 'react';
 const MeetingDetail = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const [meeting, setMeeting] = useState<Meeting | null>(location.state?.meeting || null);
+    const [meeting] = useState<Meeting | null>(location.state?.meeting || null);
 
-    // Use a Set for multiple selection. 
-    // Init from existing active alerts if available (requires backend to send this, see step 1)
-    const [selectedVIPs, setSelectedVIPs] = useState<Set<string>>(() => {
-        const initial = new Set<string>();
+    // Map of VIP Name to Alert ID for easy deletion
+    const [activeAlerts, setActiveAlerts] = useState<Record<string, number>>(() => {
+        const initial: Record<string, number> = {};
         if (location.state?.meeting?.VIPAlerts) {
             location.state.meeting.VIPAlerts.forEach((alert: any) => {
-                if (alert.status === 'active') initial.add(alert.vipName);
+                if (alert.status === 'active') initial[alert.vipName] = alert.id;
             });
         }
         return initial;
@@ -25,27 +24,15 @@ const MeetingDetail = () => {
 
     useEffect(() => {
         if (!meeting) return;
-
         const timer = setInterval(() => {
             const now = new Date();
             const start = new Date(meeting.startTime);
             const diff = start.getTime() - now.getTime();
-
-            if (diff <= 0) {
-                setTimeLeft('Started');
-                return;
-            }
-
+            if (diff <= 0) { setTimeLeft('Started'); return; }
             const hours = Math.floor(diff / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-            if (hours > 0) {
-                setTimeLeft(`in ${hours}h ${minutes}m`);
-            } else {
-                setTimeLeft(`in ${minutes}m`);
-            }
-        }, 1000); // Update every minute is enough? No, seconds for smooth feel maybe, but UI shows minutes.
-
+            if (hours > 0) { setTimeLeft(`in ${hours}h ${minutes}m`); } else { setTimeLeft(`in ${minutes}m`); }
+        }, 1000);
         return () => clearInterval(timer);
     }, [meeting]);
 
@@ -55,53 +42,69 @@ const MeetingDetail = () => {
 
     // Toggle monitor state
     const toggleMonitor = async (name: string) => {
-        const newSet = new Set(selectedVIPs);
+        const alertId = activeAlerts[name];
 
-        if (newSet.has(name)) {
+        if (alertId) {
             // Turn off
-            newSet.delete(name);
-            // In real app: call DELETE /api/alerts/:id
+            try {
+                const { deleteVIPAlert } = await import('../services/api');
+                await deleteVIPAlert(alertId);
+                const newAlerts = { ...activeAlerts };
+                delete newAlerts[name];
+                setActiveAlerts(newAlerts);
+            } catch (error) {
+                console.error(error);
+            }
         } else {
             // Turn on
-            newSet.add(name);
             try {
-                // If switching, creating a new alert (in MVP we just overwrite)
-                await createVIPAlert(meeting.id, name);
-                new Notification('Sage Alert Set', {
-                    body: `We will notify you when ${name} joins.`
-                });
+                const response = await createVIPAlert(meeting.id, name);
+                setActiveAlerts(prev => ({ ...prev, [name]: response.id }));
+
+                if (Notification.permission === 'granted') {
+                    new Notification('Sage Alert Set', {
+                        body: `We will notify you when ${name} joins.`
+                    });
+                }
             } catch (error) {
                 console.error(error);
             }
         }
-        setSelectedVIPs(newSet);
     };
 
     return (
-        <div className="settings-container">
-            <header className="settings-header">
-                <button onClick={() => navigate(-1)} className="event-op-btn" style={{ marginBottom: 12 }}>
+
+        <div className="home-container"> {/* Reusing home container for centering/width */}
+            <header className="meeting-header" style={{ marginBottom: 32 }}>
+                <button onClick={() => navigate(-1)} className="event-op-btn" style={{ marginBottom: 16 }}>
                     <ArrowLeft size={18} />
                 </button>
-                <h1>{meeting.title}</h1>
-                <p>Monitor arrivals for this meeting.</p>
+
+                <h1 style={{ fontSize: 24, fontWeight: 600, margin: '0 0 8px 0' }}>{meeting.title}</h1>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 14, color: 'var(--text-sec)' }}>
+                    <span className={timeLeft === 'Started' ? 'status-live' : 'status-soon'}>{timeLeft === 'Started' ? 'Live Now' : timeLeft}</span>
+                    <span>•</span>
+                    <span style={{ textTransform: 'capitalize' }}>{meeting.platform}</span>
+                </div>
+
+                {timeLeft === 'Started' && meeting.meetingUrl && (
+                    <a href={meeting.meetingUrl} target="_blank" rel="noreferrer" className="primary-btn" style={{ marginTop: 24, display: 'inline-flex', textDecoration: 'none' }}>
+                        Join Meeting Now
+                    </a>
+                )}
             </header>
 
-            <div className="settings-group">
-                <div className="group-title">Timing & Status</div>
-                <div className="settings-row">
-                    <div className="row-info">
-                        <label>Auto-Monitoring Status</label>
-                        <span>Tracking arrivals {timeLeft}</span>
-                    </div>
-                    <div className={timeLeft === 'Started' ? 'status-live' : 'status-soon'} style={{ fontSize: 13, fontWeight: 600 }}>
-                        {timeLeft}
-                    </div>
+            <div className="detail-section">
+                <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                    <h3 style={{ fontSize: 16, fontWeight: 600, margin: 0 }}>Participant Tracking</h3>
+                    <span style={{ fontSize: 13, color: 'var(--text-sec)' }}>{participants.length} invitees</span>
                 </div>
-            </div>
 
-            <div className="settings-group">
-                <div className="group-title">Participants ({participants.length})</div>
+                <p style={{ fontSize: 13, color: 'var(--text-sec)', marginBottom: 24 }}>
+                    Select a participant to be notified when they join.
+                </p>
+
                 <div className="accounts-list">
                     {participants.length === 0 && (
                         <div className="empty-state-v2">
@@ -109,27 +112,80 @@ const MeetingDetail = () => {
                         </div>
                     )}
 
-                    {participants.map((p) => (
-                        <div key={p} className="account-item">
-                            <div className="log-icon" style={{ background: selectedVIPs.has(p) ? 'var(--primary-faded)' : 'var(--hover)', color: selectedVIPs.has(p) ? 'var(--primary)' : 'var(--text-sec)' }}>
-                                {p.charAt(0).toUpperCase()}
+                    {participants.map((p) => {
+                        const isMonitored = !!activeAlerts[p];
+                        return (
+                            <div
+                                key={p}
+                                className="account-item"
+                                onClick={() => toggleMonitor(p)}
+                                style={{
+                                    cursor: 'pointer',
+                                    borderColor: isMonitored ? 'var(--primary)' : 'var(--border)',
+                                    background: isMonitored ? 'var(--primary-faded)' : 'var(--card-bg)'
+                                }}
+                            >
+                                <div className="log-icon" style={{
+                                    background: isMonitored ? 'var(--primary)' : 'var(--hover)',
+                                    color: isMonitored ? '#fff' : 'var(--text-sec)'
+                                }}>
+                                    {p.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="account-details" style={{ flex: 1 }}>
+                                    <span className="account-email" style={{ color: isMonitored ? 'var(--primary)' : 'var(--text)' }}>
+                                        {p}
+                                    </span>
+                                    {isMonitored && (
+                                        <span className="account-status" style={{ color: 'var(--primary)', marginTop: 2 }}>
+                                            Tracking Active
+                                        </span>
+                                    )}
+                                </div>
+                                {isMonitored ? (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <button
+                                            className="secondary-btn"
+                                            style={{ padding: '4px 8px', fontSize: 11, height: 'auto' }}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                import('../services/api').then(({ api }) => {
+                                                    api.post('/webhooks/simulate', {
+                                                        meetingId: meeting.meetingId,
+                                                        participantName: p
+                                                    }).then(res => {
+                                                        if (res.data.status === 'success' && res.data.matches.length > 0) {
+                                                            alert(`Simulation sent! Check notifications.`);
+                                                        } else {
+                                                            alert('Simulation sent but no match found. Check server logs.');
+                                                        }
+                                                    });
+                                                });
+                                            }}
+                                        >
+                                            Test
+                                        </button>
+                                        <div style={{ color: 'var(--primary)' }}>
+                                            ✓
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{ opacity: 0.3 }}>
+                                        +
+                                    </div>
+                                )}
                             </div>
-                            <div className="account-details" style={{ flex: 1 }}>
-                                <span className="account-email">{p}</span>
-                                {selectedVIPs.has(p) && <span className="account-status">Monitoring VIP</span>}
-                            </div>
-                            <label className="switch">
-                                <input
-                                    type="checkbox"
-                                    checked={selectedVIPs.has(p)}
-                                    onChange={() => toggleMonitor(p)}
-                                />
-                                <span className="slider"></span>
-                            </label>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </div>
+
+            {Object.keys(activeAlerts).length > 0 && (
+                <div className="info-box" style={{ marginTop: 32, padding: 16, background: 'var(--hover)', borderRadius: 8 }}>
+                    <p style={{ margin: 0, fontSize: 13, color: 'var(--text-sec)' }}>
+                        ℹ️ You will receive a <strong>push notification</strong> on this device when selected participants join.
+                    </p>
+                </div>
+            )}
         </div>
     );
 };

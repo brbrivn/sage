@@ -34,6 +34,11 @@ export const deleteMeeting = async (id: number) => {
     return response.data;
 };
 
+export const deleteVIPAlert = async (id: number) => {
+    const response = await api.delete(`/alerts/${id}`);
+    return response.data;
+};
+
 export const fetchAccounts = async () => {
     const response = await api.get('/auth/accounts');
     return response.data;

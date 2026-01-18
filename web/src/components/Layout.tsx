@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { Home, Settings as SettingsIcon, LogOut } from 'lucide-react';
 import { removeToken } from '../services/api';
@@ -40,7 +41,11 @@ const Sidebar = () => {
     );
 };
 
+
+
 const Layout = () => {
+    const [showActivity, setShowActivity] = useState(true);
+
     return (
         <div className="app-layout">
             <NotificationListener />
@@ -48,7 +53,7 @@ const Layout = () => {
             <main className="main-content">
                 <Outlet />
             </main>
-            <ActivityPanel />
+            <ActivityPanel isOpen={showActivity} onToggle={() => setShowActivity(!showActivity)} />
         </div>
     );
 };

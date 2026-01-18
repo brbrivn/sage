@@ -63,4 +63,46 @@ router.post('/zoom', async (req, res) => {
     res.status(200).send('OK');
 });
 
+// Dev-only simulation endpoint
+router.post('/simulate', async (req, res) => {
+    if (process.env.NODE_ENV === 'production') return res.status(403).send('Dev only');
+
+    const { meetingId, participantName, participantEmail } = req.body;
+    console.log(`[Simulate] Webhook for Meeting ${meetingId}, Participant: ${participantName}`);
+
+    try {
+        const meetings = await Meeting.findAll({
+            where: { meetingId: meetingId.toString() }
+        });
+
+        if (meetings.length === 0) {
+            return res.json({ status: 'no_meeting_found', message: `No meeting found with Platform ID ${meetingId}` });
+        }
+
+        const results = [];
+
+        for (const meeting of meetings) {
+            const alerts = await VIPAlert.findAll({
+                where: { meetingId: meeting.id, status: 'active' }
+            });
+
+            for (const alert of alerts) {
+                const nameMatch = participantName.toLowerCase().includes(alert.vipName.toLowerCase());
+                const emailMatch = participantEmail && participantEmail === alert.vipEmail;
+
+                if (nameMatch || emailMatch) {
+                    await triggerNotification(alert, meeting);
+                    results.push({ alertId: alert.id, vip: alert.vipName, status: 'triggered' });
+                }
+            }
+        }
+
+        res.json({ status: 'success', matches: results });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Simulation failed' });
+    }
+});
+
 export default router;

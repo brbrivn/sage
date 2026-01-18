@@ -49,6 +49,12 @@ ConnectedAccount.init(
     {
         sequelize,
         tableName: 'connected_accounts',
+        indexes: [
+            {
+                unique: true,
+                fields: ['userId', 'provider', 'email']
+            }
+        ]
     }
 );
 

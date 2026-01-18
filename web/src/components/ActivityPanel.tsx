@@ -12,7 +12,14 @@ interface Activity {
     Meeting?: { title: string };
 }
 
-const ActivityPanel = () => {
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
+interface ActivityPanelProps {
+    isOpen: boolean;
+    onToggle: () => void;
+}
+
+const ActivityPanel = ({ isOpen, onToggle }: ActivityPanelProps) => {
     const [activities, setActivities] = useState<Activity[]>([]);
 
     const fetchLogs = async () => {
@@ -27,12 +34,31 @@ const ActivityPanel = () => {
     useEffect(() => {
         fetchLogs();
         const interval = setInterval(fetchLogs, 30000); // Polling every 30s
-        return () => clearInterval(interval);
+
+        window.addEventListener('activity-update', fetchLogs);
+
+        return () => {
+            clearInterval(interval);
+            window.removeEventListener('activity-update', fetchLogs);
+        };
     }, []);
+
+    if (!isOpen) {
+        return (
+            <aside className="right-panel collapsed">
+                <button className="panel-toggle-btn" onClick={onToggle}>
+                    <ChevronLeft size={16} />
+                </button>
+            </aside>
+        );
+    }
 
     return (
         <aside className="right-panel">
             <div className="panel-header">
+                <button className="panel-toggle-btn" onClick={onToggle} style={{ marginRight: 8 }}>
+                    <ChevronRight size={16} />
+                </button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1 }}>
                     <Bell size={18} />
                     <h3>Activity Log</h3>

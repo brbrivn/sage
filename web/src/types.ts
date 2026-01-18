@@ -11,6 +11,7 @@ export interface Meeting {
     endTime: string;
     platform: 'zoom' | 'meet' | 'teams' | 'other';
     meetingUrl: string;
+    accountId?: number;
     participants: string[];
     VIPAlerts?: VIPAlert[];
 }
